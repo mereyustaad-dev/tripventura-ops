@@ -1,0 +1,130 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  password      String
+  name          String
+  role          String    @default("viewer") // admin, manager, operations, finance, viewer
+  avatar        String?
+  phone         String?
+  department    String?
+  isActive      Boolean   @default(true)
+  lastLogin     DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  bookings      Booking[]
+  notifications Notification[]
+  activities    Activity[]
+}
+
+model Tour {
+  id                    String    @id @default(cuid())
+  tourName              String
+  websiteLink           String?
+  tourLinkCtrip         String?
+  tourLinkViator        String?
+  tourLinkHeadout       String?
+  tourLinkKlook         String?
+  tourLinkExpedition    String?
+  tourLinkCivitatis     String?
+  destinationCity       String
+  supplierPriceAdult    String?
+  supplierPriceChild    String?
+  availabilityDay       String?
+  inclusion             String?
+  supplierInfo          String?
+  websitePrice          String?
+  ctripPrice            String?
+  viatorPrice           String?
+  klookPrice            String?
+  expeditionPrice       String?
+  civitatisPrice        String?
+  headoutPrice          String?
+  bookings              Int       @default(0)
+  revenue               String?
+  category              String?
+  status                String    @default("active") // active, inactive, draft
+  rating                Float?
+  sheetRow              Int?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  bookingRecords        Booking[]
+}
+
+model Booking {
+  id              String   @id @default(cuid())
+  tourId          String
+  userId          String?
+  customerName    String
+  customerEmail   String?
+  customerPhone   String?
+  marketplace     String?  // website, ctrip, viator, klook, expedition, civitatis, headout
+  adults          Int      @default(1)
+  children        Int      @default(0)
+  totalPrice      Float
+  supplierCost    Float?
+  profit          Float?
+  bookingDate     DateTime @default(now())
+  tourDate        DateTime?
+  status          String   @default("confirmed") // confirmed, pending, cancelled, completed
+  notes           String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  tour            Tour     @relation(fields: [tourId], references: [id])
+  user            User?    @relation(fields: [userId], references: [id])
+}
+
+model Notification {
+  id          String   @id @default(cuid())
+  userId      String
+  title       String
+  message     String
+  type        String   @default("info") // info, warning, alert, success
+  channel     String?  // whatsapp, email, wechat, in-app
+  isRead      Boolean  @default(false)
+  link        String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user        User     @relation(fields: [userId], references: [id])
+}
+
+model Activity {
+  id          String   @id @default(cuid())
+  userId      String
+  action      String
+  description String
+  metadata    String?  // JSON
+  createdAt   DateTime @default(now())
+
+  user        User     @relation(fields: [userId], references: [id])
+}
+
+model SyncLog {
+  id          String   @id @default(cuid())
+  sheetUrl    String
+  status      String   @default("pending") // pending, running, completed, failed
+  totalRows   Int      @default(0)
+  importedRows Int     @default(0)
+  error       String?
+  startedAt   DateTime @default(now())
+  completedAt DateTime?
+}
+
+model DashboardConfig {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  value       String
+  updatedAt   DateTime @updatedAt
+}
